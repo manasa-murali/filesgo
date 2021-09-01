@@ -3,13 +3,13 @@ package com.example.filesgo.viewModel
 import android.text.SpannableStringBuilder
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.filesgo.repository.FileRepository
-import com.example.filesgo.utils.Constants
 import com.example.filesgo.model.Audio
 import com.example.filesgo.model.FileData
 import com.example.filesgo.model.Image
 import com.example.filesgo.model.Video
+import com.example.filesgo.repository.FileRepository
 import com.example.filesgo.utils.Action
+import com.example.filesgo.utils.Constants
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -123,6 +123,16 @@ constructor(
                     uiState = uiDataFlow.value.uiState,
                     sortOrder = uiDataFlow.value.sortOrder,
                     searchResult = emptyList())
+            )
+        }
+    }
+
+    fun displayDetails(fileData: FileData) {
+        viewModelScope.launch(dispatcher) {
+            mutableAppStateFlow.emit(
+                uiDataFlow.value.copy(
+                    imageDetails = fileData
+                )
             )
         }
     }

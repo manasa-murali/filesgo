@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.navigation.NavController
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.filesgo.R
@@ -14,7 +15,11 @@ import com.example.filesgo.model.FileData
 import com.example.filesgo.model.Image
 import com.example.filesgo.model.Video
 
-class FilesAdapter(private var filesList: List<FileData>) :
+class FilesAdapter(
+    private var filesList: List<FileData>,
+    private val navController: NavController,
+    private val detailsClickListener: FileSearchFragment
+) :
     RecyclerView.Adapter<FilesAdapter.FileViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FileViewHolder {
@@ -35,6 +40,10 @@ class FilesAdapter(private var filesList: List<FileData>) :
             is Image -> {
                 holder.durationParent.visibility = View.GONE
                 holder.detailsButton.visibility = View.VISIBLE
+                holder.detailsButton.setOnClickListener {
+                    detailsClickListener.onImageClicked(fileData)
+                    setFlow(navController)
+                }
             }
             is Video -> {
                 holder.durationParent.visibility = View.VISIBLE
@@ -42,7 +51,15 @@ class FilesAdapter(private var filesList: List<FileData>) :
                 holder.detailsButton.visibility = View.GONE
             }
         }
+
     }
+
+    private fun setFlow(navController: NavController) {
+        if (navController.currentDestination?.id == R.id.fileSearchFragment) {
+            navController.navigate(R.id.action_fileSearchFragment_to_detailsFragment)
+        }
+    }
+
     fun submitList(itemsList: List<FileData>) {
         val newData = itemsList
         updateAdapter(itemsList)

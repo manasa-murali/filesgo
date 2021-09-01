@@ -7,11 +7,13 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.filesgo.MainActivity
 import com.example.filesgo.R
+import com.example.filesgo.model.FileData
 import com.example.filesgo.utils.Constants
 import com.example.filesgo.viewModel.FileSearchViewModel
 import com.example.filesgo.viewModel.MyUIState
@@ -23,19 +25,19 @@ import kotlinx.coroutines.launch
 
 
 @AndroidEntryPoint
-class FileSearchFragment : Fragment(R.layout.fragment_file_search) {
+class FileSearchFragment : Fragment(R.layout.fragment_file_search),OnDetailsClicked {
 
-    private val viewModel: FileSearchViewModel by viewModels()
-
+    lateinit var viewModel : FileSearchViewModel
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        viewModel = (requireActivity() as MainActivity).viewModel
 
         val recyclerView = view.findViewById<RecyclerView>(R.id.file_search_list)
         recyclerView.layoutManager = LinearLayoutManager(context)
 
         var adapter = recyclerView.adapter
         if (adapter == null) {
-            adapter = FilesAdapter(arrayListOf())
+            adapter = FilesAdapter(arrayListOf(), this.findNavController(),this)
             recyclerView.adapter = adapter
         }
         lifecycleScope.launchWhenCreated {
@@ -95,5 +97,9 @@ class FileSearchFragment : Fragment(R.layout.fragment_file_search) {
                 viewModel.cancelSearch()
             }
         }
+    }
+
+    override fun onImageClicked(fileData: FileData) {
+        viewModel.displayDetails(fileData)
     }
 }

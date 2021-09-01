@@ -7,7 +7,8 @@ data class AppState(
     val isSearchEnabled: Boolean = false,
     val uiState: MyUIState = MyUIState.Initial,
     val searchResult: List<FileData> = emptyList(),
-    val sortOrder: Action.SortBy = Action.SortBy.EXTENSION
+    val sortOrder: Action.SortBy = Action.SortBy.EXTENSION,
+    val imageDetails: FileData? = null
 )
 
 sealed class MyUIState{

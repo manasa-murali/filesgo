@@ -9,5 +9,14 @@
         android:id="@+id/fileSearchFragment"
         android:name="com.example.filesgo.view.FileSearchFragment"
         android:label="fragment_file_search"
-        tools:layout="@layout/fragment_file_search" />
+        tools:layout="@layout/fragment_file_search" >
+        <action
+            android:id="@+id/action_fileSearchFragment_to_detailsFragment"
+            app:destination="@id/detailsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/detailsFragment"
+        android:name="com.example.filesgo.DetailsFragment"
+        android:label="fragment_details"
+        tools:layout="@layout/fragment_details" />
 </navigation>
