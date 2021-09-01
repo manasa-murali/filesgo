@@ -33,7 +33,8 @@
         android:id="@+id/imageview"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/date_added"/>
+        app:layout_constraintTop_toBottomOf="@id/date_added"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

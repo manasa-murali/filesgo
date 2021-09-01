@@ -52,6 +52,7 @@ class FileRepository(private val contentResolver: ContentResolver) : IRepository
                     val displayName = cursor.getString(displayNameColumn)
                     val extension = displayName.split(".").last()
                     val path = cursor.getString(dataColumn)
+
                     when (mediaType) {
                         MEDIA_TYPE_IMAGE.toString() -> {
                             val fileData = FileData(id,displayName,
