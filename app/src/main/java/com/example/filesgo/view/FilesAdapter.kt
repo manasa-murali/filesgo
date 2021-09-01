@@ -18,7 +18,7 @@ import com.example.filesgo.model.Video
 class FilesAdapter(
     private var filesList: List<FileData>,
     private val navController: NavController,
-    private val detailsClickListener: FileSearchFragment
+    private val detailsClickListener: FileSearchFragment,
 ) :
     RecyclerView.Adapter<FilesAdapter.FileViewHolder>() {
 
@@ -31,10 +31,10 @@ class FilesAdapter(
         val fileData = filesList[position]
         holder.fileNameTextView.text = fileData.name
         holder.filePathTextView.text = fileData.path
-        when (fileData.fileType){
+        when (fileData.fileType) {
             is Audio -> {
                 holder.durationParent.visibility = View.VISIBLE
-                holder.durationValueTextView.text = fileData.fileType.duration.toString()
+                holder.durationValueTextView.text = convertSectoHMS(fileData.fileType.duration)
                 holder.detailsButton.visibility = View.GONE
             }
             is Image -> {
@@ -47,11 +47,28 @@ class FilesAdapter(
             }
             is Video -> {
                 holder.durationParent.visibility = View.VISIBLE
-                holder.durationValueTextView.text = fileData.fileType.duration.toString()
+                holder.durationValueTextView.text = convertSectoHMS(fileData.fileType.duration)
                 holder.detailsButton.visibility = View.GONE
             }
         }
 
+    }
+
+    private fun convertSectoHMS(duration: Int): String {
+        val hours = duration / 3600
+        val minutes = (hours) / 60
+        val seconds = duration % 60
+        val stringBuilder = StringBuilder()
+        if (hours != 0) {
+            stringBuilder.append(hours).append(" H:")
+        }
+        if (hours == 0 && minutes == 0) {
+            stringBuilder.append(seconds).append(" S")
+        } else {
+            stringBuilder.append(minutes).append(" M:")
+            stringBuilder.append(seconds).append(" S")
+        }
+        return stringBuilder.toString()
     }
 
     private fun setFlow(navController: NavController) {
@@ -65,6 +82,7 @@ class FilesAdapter(
         updateAdapter(itemsList)
         filesList = newData
     }
+
     private fun updateAdapter(newData: List<FileData>) {
         DiffUtil.calculateDiff(object : DiffUtil.Callback() {
             override fun getOldListSize(): Int {
@@ -84,13 +102,14 @@ class FilesAdapter(
             }
         }).dispatchUpdatesTo(this)
     }
+
     override fun getItemCount(): Int {
         return filesList.size
     }
 
-    class FileViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
-        val fileNameTextView: TextView  = itemView.findViewById(R.id.fileNameValue)
-        val filePathTextView: TextView  = itemView.findViewById(R.id.filePathValue)
+    class FileViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val fileNameTextView: TextView = itemView.findViewById(R.id.fileNameValue)
+        val filePathTextView: TextView = itemView.findViewById(R.id.filePathValue)
         val detailsButton: Button = itemView.findViewById(R.id.details_button)
         val durationParent: ConstraintLayout = itemView.findViewById(R.id.durationParent)
         val durationValueTextView: TextView = itemView.findViewById(R.id.durationValue)

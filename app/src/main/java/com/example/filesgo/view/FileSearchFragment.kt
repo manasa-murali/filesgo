@@ -1,6 +1,7 @@
 package com.example.filesgo.view
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
@@ -25,9 +26,11 @@ import kotlinx.coroutines.launch
 
 
 @AndroidEntryPoint
-class FileSearchFragment : Fragment(R.layout.fragment_file_search),OnDetailsClicked {
+class FileSearchFragment : Fragment(R.layout.fragment_file_search), OnDetailsClicked {
 
-    lateinit var viewModel : FileSearchViewModel
+    lateinit var viewModel: FileSearchViewModel
+
+    @SuppressLint("SetTextI18n")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         viewModel = (requireActivity() as MainActivity).viewModel
@@ -37,7 +40,7 @@ class FileSearchFragment : Fragment(R.layout.fragment_file_search),OnDetailsClic
 
         var adapter = recyclerView.adapter
         if (adapter == null) {
-            adapter = FilesAdapter(arrayListOf(), this.findNavController(),this)
+            adapter = FilesAdapter(arrayListOf(), this.findNavController(), this)
             recyclerView.adapter = adapter
         }
         lifecycleScope.launchWhenCreated {
@@ -62,7 +65,12 @@ class FileSearchFragment : Fragment(R.layout.fragment_file_search),OnDetailsClic
                         recyclerView.visibility = View.VISIBLE
                         if (appState.isSearchEnabled) {
                             (adapter as FilesAdapter).submitList(appState.searchResult)
+                            val searchResultCount = view.findViewById<TextView>(R.id.searchResult)
+                            searchResultCount.visibility = View.VISIBLE
+                            searchResultCount.text =
+                                Constants.FILES_FOUND + (viewModel.uiDataFlow.value.searchResult.size).toString()
                         } else {
+                            view.findViewById<TextView>(R.id.searchResult).visibility = View.GONE
                             (adapter as FilesAdapter).submitList(appState.uiState.myUIDataList)
                         }
                     }

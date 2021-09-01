@@ -39,9 +39,6 @@ constructor(
             )
             val filesList = fileRepository.loadFilesFromStorage()
             if (filesList.isNotEmpty()) {
-                mutableAppStateFlow.emit(
-                    AppState(uiState = MyUIState.Success(filesList))
-                )
                 sortFilesBy(Action.SortBy.EXTENSION, filesList)
             } else {
                 mutableAppStateFlow.emit(
@@ -53,7 +50,7 @@ constructor(
         }
     }
 
-    fun sortFilesBy(sortOrder: Action.SortBy, filesList: List<FileData>) { //only during success
+    fun sortFilesBy(sortOrder: Action.SortBy, filesList: List<FileData>) {
         viewModelScope.launch(dispatcher) {
             val sortedFiles = when (sortOrder) {
                 Action.SortBy.ALPHABET -> {

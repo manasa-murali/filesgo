@@ -31,9 +31,10 @@
 
             <TextView
                 android:id="@+id/fileNameValue"
-                android:layout_width="wrap_content"
+                android:layout_width="290dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="5dp"
+                android:gravity="right"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@id/fileName"
                 app:layout_constraintTop_toTopOf="parent" />
@@ -59,9 +60,10 @@
 
             <TextView
                 android:id="@+id/filePathValue"
-                android:layout_width="wrap_content"
+                android:layout_width="290dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="5dp"
+                android:gravity="right"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@id/filePath"
                 app:layout_constraintTop_toTopOf="parent" />
@@ -91,6 +93,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="5dp"
+                android:gravity="right"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@id/duration"
                 app:layout_constraintTop_toTopOf="parent" />
