@@ -39,7 +39,7 @@ constructor(
             )
             val filesList = fileRepository.loadFilesFromStorage()
             if (filesList.isNotEmpty()) {
-                sortFilesBy(Action.SortBy.EXTENSION, filesList)
+                sortFilesBy(uiDataFlow.value.sortOrder, filesList)
             } else {
                 mutableAppStateFlow.emit(
                     AppState(uiState = MyUIState.Failure(
@@ -65,9 +65,9 @@ constructor(
                 Action.SortBy.CHRONOLOGY -> {
                     filesList.sortedBy {
                         when (it.fileType) {
-                            is Audio -> (it as Audio).dateCreated
-                            is Image -> (it as Image).dateCreated
-                            is Video -> (it as Video).dateCreated
+                            is Audio -> it.fileType.dateCreated
+                            is Image -> it.fileType.dateCreated
+                            is Video -> it.fileType.dateCreated
                         }
                     }
                 }

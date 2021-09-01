@@ -4,9 +4,8 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
-import android.widget.Button
-import android.widget.EditText
-import android.widget.TextView
+import android.view.View.GONE
+import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -15,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.filesgo.MainActivity
 import com.example.filesgo.R
 import com.example.filesgo.model.FileData
+import com.example.filesgo.utils.Action
 import com.example.filesgo.utils.Constants
 import com.example.filesgo.viewModel.FileSearchViewModel
 import com.example.filesgo.viewModel.MyUIState
@@ -26,7 +26,8 @@ import kotlinx.coroutines.launch
 
 
 @AndroidEntryPoint
-class FileSearchFragment : Fragment(R.layout.fragment_file_search), OnDetailsClicked {
+class FileSearchFragment : Fragment(R.layout.fragment_file_search), OnDetailsClicked,
+    AdapterView.OnItemSelectedListener {
 
     lateinit var viewModel: FileSearchViewModel
 
@@ -43,6 +44,14 @@ class FileSearchFragment : Fragment(R.layout.fragment_file_search), OnDetailsCli
             adapter = FilesAdapter(arrayListOf(), this.findNavController(), this)
             recyclerView.adapter = adapter
         }
+        val spinner = view.findViewById<Spinner>(R.id.sort_order_spinner)
+        ArrayAdapter.createFromResource(view.context,
+            R.array.sort_array,
+            android.R.layout.simple_spinner_item).also { adapter ->
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            spinner.adapter = adapter
+        }
+        spinner.onItemSelectedListener = this
         lifecycleScope.launchWhenCreated {
             viewModel.uiDataFlow.collect { appState ->
                 when (appState.uiState) {
@@ -73,11 +82,18 @@ class FileSearchFragment : Fragment(R.layout.fragment_file_search), OnDetailsCli
                             view.findViewById<TextView>(R.id.searchResult).visibility = View.GONE
                             (adapter as FilesAdapter).submitList(appState.uiState.myUIDataList)
                         }
+                        when (appState.sortOrder) {
+                            Action.SortBy.ALPHABET -> spinner.setSelection(1)
+                            Action.SortBy.CHRONOLOGY -> spinner.setSelection(2)
+                            Action.SortBy.EXTENSION -> spinner.setSelection(3)
+                        }
                     }
                 }
             }
         }
         view.findViewById<Button>(R.id.fetch_files_button).setOnClickListener {
+            view.findViewById<TextView>(R.id.searchResult).visibility = GONE
+            view.findViewById<EditText>(R.id.search_edittext).setText("")
             lifecycleScope.launch(Dispatchers.IO) {
                 val check = TedPermission.create()
                     .setPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
@@ -109,5 +125,32 @@ class FileSearchFragment : Fragment(R.layout.fragment_file_search), OnDetailsCli
 
     override fun onImageClicked(fileData: FileData) {
         viewModel.displayDetails(fileData)
+    }
+
+    override fun onItemSelected(parent: AdapterView<*>?, view: View?, pos: Int, id: Long) {
+        if ((viewModel.uiDataFlow.value.uiState is MyUIState.Success)) {
+            val filesList = if (viewModel.uiDataFlow.value.isSearchEnabled) {
+                viewModel.uiDataFlow.value.searchResult
+            } else {
+                (viewModel.uiDataFlow.value.uiState as MyUIState.Success).myUIDataList
+            }
+            val sortOrder = when (parent!!.getItemAtPosition(pos).toString()) {
+                Action.SortBy.ALPHABET.name -> {
+                    Action.SortBy.ALPHABET
+                }
+                Action.SortBy.CHRONOLOGY.name -> {
+                    Action.SortBy.CHRONOLOGY
+                }
+                Action.SortBy.EXTENSION.name -> {
+                    Action.SortBy.EXTENSION
+                }
+                else -> Action.SortBy.EXTENSION
+            }
+            viewModel.sortFilesBy(sortOrder, filesList)
+        }
+    }
+
+    override fun onNothingSelected(p0: AdapterView<*>?) {
+        TODO("Not yet implemented")
     }
 }
