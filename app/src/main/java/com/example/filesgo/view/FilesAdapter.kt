@@ -1,13 +1,15 @@
 package com.example.filesgo.view
 
+import android.graphics.Color
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.style.BackgroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.navigation.NavController
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.filesgo.R
 import com.example.filesgo.model.Audio
@@ -17,10 +19,11 @@ import com.example.filesgo.model.Video
 
 class FilesAdapter(
     private var filesList: List<FileData>,
-    private val navController: NavController,
-    private val detailsClickListener: FileSearchFragment,
+    private var parentFragment: FileSearchFragment,
 ) :
     RecyclerView.Adapter<FilesAdapter.FileViewHolder>() {
+
+    private var searchString: String = ""
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FileViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
@@ -31,6 +34,18 @@ class FilesAdapter(
         val fileData = filesList[position]
         holder.fileNameTextView.text = fileData.name
         holder.filePathTextView.text = fileData.path
+        if (!searchString.isNullOrEmpty()) {
+            val startIndex = fileData.name.indexOf(searchString)
+            if (startIndex != -1) {
+                val editableText = SpannableStringBuilder()
+                editableText.append(fileData.name)
+                editableText.setSpan(BackgroundColorSpan(Color.BLUE),
+                    startIndex,
+                    startIndex + searchString.length,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                holder.fileNameTextView.text = editableText
+            }
+        }
         when (fileData.fileType) {
             is Audio -> {
                 holder.durationParent.visibility = View.VISIBLE
@@ -41,8 +56,7 @@ class FilesAdapter(
                 holder.durationParent.visibility = View.GONE
                 holder.detailsButton.visibility = View.VISIBLE
                 holder.detailsButton.setOnClickListener {
-                    detailsClickListener.onImageClicked(fileData)
-                    setFlow(navController)
+                    parentFragment.onImageClicked(fileData)
                 }
             }
             is Video -> {
@@ -71,36 +85,15 @@ class FilesAdapter(
         return stringBuilder.toString()
     }
 
-    private fun setFlow(navController: NavController) {
-        if (navController.currentDestination?.id == R.id.fileSearchFragment) {
-            navController.navigate(R.id.action_fileSearchFragment_to_detailsFragment)
-        }
-    }
 
-    fun submitList(itemsList: List<FileData>) {
-        val newData = itemsList
-        updateAdapter(itemsList)
-        filesList = newData
-    }
-
-    private fun updateAdapter(newData: List<FileData>) {
-        DiffUtil.calculateDiff(object : DiffUtil.Callback() {
-            override fun getOldListSize(): Int {
-                return filesList.size
-            }
-
-            override fun getNewListSize(): Int {
-                return newData.size
-            }
-
-            override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-                return filesList[oldItemPosition].id == newData[newItemPosition].id
-            }
-
-            override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-                return filesList[oldItemPosition] == newData[newItemPosition]
-            }
-        }).dispatchUpdatesTo(this)
+    fun setAdapterData(
+        filesList: List<FileData>,
+        searchString: String,
+        fileSearchFragment: FileSearchFragment,
+    ) {
+        this.filesList = filesList
+        this.searchString = searchString
+        this.parentFragment = fileSearchFragment
     }
 
     override fun getItemCount(): Int {

@@ -27,8 +27,7 @@ constructor(
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
 
-    private val mutableAppStateFlow = MutableStateFlow(AppState(false, MyUIState.Initial,
-        emptyList()))
+    private val mutableAppStateFlow = MutableStateFlow(AppState(uiState = MyUIState.Initial))
 
     val uiDataFlow = mutableAppStateFlow.asStateFlow()
 
@@ -82,15 +81,14 @@ constructor(
                     AppState(isSearchEnabled = uiDataFlow.value.isSearchEnabled,
                         uiState = uiDataFlow.value.uiState,
                         sortOrder = sortOrder,
-                        searchResult = sortedFiles,
+                        searchResult = SearchResult(uiDataFlow.value.searchResult.searchString,
+                            sortedFiles),
                         isSorting = true)
                 )
             } else {
                 mutableAppStateFlow.emit(
-                    AppState(isSearchEnabled = uiDataFlow.value.isSearchEnabled,
-                        uiState = MyUIState.Success(sortedFiles),
+                    AppState(uiState = MyUIState.Success(sortedFiles),
                         sortOrder = sortOrder,
-                        searchResult = uiDataFlow.value.searchResult,
                         isSorting = true)
                 )
             }
@@ -107,7 +105,7 @@ constructor(
                     AppState(
                         isSearchEnabled = true,
                         uiState = uiDataFlow.value.uiState,
-                        searchResult = filesFound,
+                        searchResult = SearchResult(searchString, filesFound),
                         sortOrder = uiDataFlow.value.sortOrder
                     )
                 )
@@ -121,7 +119,7 @@ constructor(
                 AppState(isSearchEnabled = false,
                     uiState = uiDataFlow.value.uiState,
                     sortOrder = uiDataFlow.value.sortOrder,
-                    searchResult = emptyList())
+                    searchResult = SearchResult("", emptyList()))
             )
         }
     }

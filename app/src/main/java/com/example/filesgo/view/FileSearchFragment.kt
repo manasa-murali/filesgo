@@ -45,7 +45,7 @@ class FileSearchFragment : Fragment(R.layout.fragment_file_search), OnDetailsCli
 
         var adapter = recyclerView.adapter
         if (adapter == null) {
-            adapter = FilesAdapter(arrayListOf(), this.findNavController(), this)
+            adapter = FilesAdapter(arrayListOf(), this)
             recyclerView.adapter = adapter
         }
         val spinner = view.findViewById<Spinner>(R.id.sort_order_spinner)
@@ -57,9 +57,11 @@ class FileSearchFragment : Fragment(R.layout.fragment_file_search), OnDetailsCli
         }
         spinner.onItemSelectedListener = this
 
+
         notificationManager = NotificationManagerCompat.from(requireContext())
 
         lifecycleScope.launchWhenCreated {
+            var oldState = viewModel.uiDataFlow.value
             viewModel.uiDataFlow.collect { appState ->
                 when (appState.uiState) {
                     is MyUIState.Failure -> {
@@ -80,20 +82,25 @@ class FileSearchFragment : Fragment(R.layout.fragment_file_search), OnDetailsCli
                         view.findViewById<TextView>(R.id.error_text).visibility = View.GONE
                         recyclerView.visibility = View.VISIBLE
                         if (appState.isSearchEnabled) {
-                            (adapter as FilesAdapter).submitList(appState.searchResult)
-                            val searchResultCount = view.findViewById<TextView>(R.id.searchResult)
+                            (recyclerView.adapter as FilesAdapter).setAdapterData(appState.searchResult.filesFound,
+                                appState.searchResult.searchString, this@FileSearchFragment)
+                            (recyclerView.adapter as FilesAdapter).notifyDataSetChanged()
+
+                            val searchResultCount =
+                                view.findViewById<TextView>(R.id.searchResult)
                             searchResultCount.visibility = View.VISIBLE
                             val filesFound =
-                                (viewModel.uiDataFlow.value.searchResult.size).toString()
+                                (viewModel.uiDataFlow.value.searchResult.filesFound.size).toString()
                             searchResultCount.text =
                                 Constants.FILES_FOUND + filesFound
-                            if (!appState.isSorting) {
+                            if (!appState.isSorting && (oldState != appState && appState.imageDetails == null)) {
                                 constructNotification(filesFound)
                             }
-
                         } else {
                             view.findViewById<TextView>(R.id.searchResult).visibility = View.GONE
-                            (adapter as FilesAdapter).submitList(appState.uiState.myUIDataList)
+                            (recyclerView.adapter as FilesAdapter).setAdapterData(appState.uiState.myUIDataList,
+                                "", this@FileSearchFragment)
+                            (recyclerView.adapter as FilesAdapter).notifyDataSetChanged()
                         }
                         when (appState.sortOrder) {
                             Action.SortBy.ALPHABET -> spinner.setSelection(1)
@@ -102,6 +109,7 @@ class FileSearchFragment : Fragment(R.layout.fragment_file_search), OnDetailsCli
                         }
                     }
                 }
+                oldState = appState
             }
         }
         view.findViewById<Button>(R.id.fetch_files_button).setOnClickListener {
@@ -151,12 +159,15 @@ class FileSearchFragment : Fragment(R.layout.fragment_file_search), OnDetailsCli
 
     override fun onImageClicked(fileData: FileData) {
         viewModel.displayDetails(fileData)
+        if (findNavController().currentDestination?.id == R.id.fileSearchFragment) {
+            findNavController().navigate(R.id.action_fileSearchFragment_to_detailsFragment)
+        }
     }
 
     override fun onItemSelected(parent: AdapterView<*>?, view: View?, pos: Int, id: Long) {
         if ((viewModel.uiDataFlow.value.uiState is MyUIState.Success)) {
             val filesList = if (viewModel.uiDataFlow.value.isSearchEnabled) {
-                viewModel.uiDataFlow.value.searchResult
+                viewModel.uiDataFlow.value.searchResult.filesFound
             } else {
                 (viewModel.uiDataFlow.value.uiState as MyUIState.Success).myUIDataList
             }
