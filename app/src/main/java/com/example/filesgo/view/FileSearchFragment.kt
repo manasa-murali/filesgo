@@ -93,7 +93,7 @@ class FileSearchFragment : Fragment(R.layout.fragment_file_search), OnDetailsCli
                                 (viewModel.uiDataFlow.value.searchResult.filesFound.size).toString()
                             searchResultCount.text =
                                 Constants.FILES_FOUND + filesFound
-                            if (!appState.isSorting && (oldState != appState && appState.imageDetails == null)) {
+                            if (!appState.isSorting && (oldState != appState && appState.fileDetails == null)) {
                                 constructNotification(filesFound)
                             }
                         } else {
@@ -147,7 +147,13 @@ class FileSearchFragment : Fragment(R.layout.fragment_file_search), OnDetailsCli
                 viewModel.uiDataFlow.value.isSearchEnabled
             ) {
                 viewModel.writeToFile()
-                Toast.makeText(requireContext(), Constants.FILES_WRITTEN, Toast.LENGTH_LONG).show()
+                if (viewModel.uiDataFlow.value.searchResult.filesFound.isNotEmpty()) {
+                    Toast.makeText(requireContext(), Constants.FILES_WRITTEN, Toast.LENGTH_LONG)
+                        .show()
+                } else {
+                    Toast.makeText(requireContext(), Constants.FILES_NOT_WRITTEN, Toast.LENGTH_LONG)
+                        .show()
+                }
             }
         }
     }
@@ -165,7 +171,7 @@ class FileSearchFragment : Fragment(R.layout.fragment_file_search), OnDetailsCli
 
     }
 
-    override fun onImageClicked(fileData: FileData) {
+    override fun onItemClicked(fileData: FileData) {
         viewModel.displayDetails(fileData)
         if (findNavController().currentDestination?.id == R.id.fileSearchFragment) {
             findNavController().navigate(R.id.action_fileSearchFragment_to_detailsFragment)

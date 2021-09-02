@@ -128,7 +128,7 @@ constructor(
         viewModelScope.launch(dispatcher) {
             mutableAppStateFlow.emit(
                 uiDataFlow.value.copy(
-                    imageDetails = fileData
+                    fileDetails = fileData
                 )
             )
         }

@@ -3,8 +3,12 @@
     <string name="file_name">FILE NAME</string>
     <string name="file_path">FILE PATH</string>
     <string name="duration">DURATION</string>
+    <string name="album">ALBUM</string>
+    <string name="width">WIDTH</string>
+    <string name="height">HEIGHT</string>
     <string name="details">DETAILS</string>
     <string name="write_button_text">WRITE</string>
     <string name="fetch_button">Fetch Files</string>
     <string name="date_added">Date Added</string>
+    <string name="date_modified">Date Modified</string>
 </resources>

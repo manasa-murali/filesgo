@@ -1,21 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".view.DetailsFragment">
 
-    <TextView
-        android:layout_margin="5dp"
-        android:layout_width="wrap_content"
-        android:layout_height="50dp"
-        android:id="@+id/date_added"
-        android:textStyle="bold"
-        android:textAllCaps="true"
-        android:gravity="center"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:layout_margin="5dp"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:id="@+id/date_added"
+            android:textStyle="bold"
+            android:textAllCaps="true"
+            android:gravity="center"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
         android:text="@string/date_added" />
     <TextView
         android:layout_margin="5dp"
@@ -23,19 +27,159 @@
         android:layout_height="50dp"
         android:id="@+id/date_added_value"
         android:textStyle="bold"
-        android:textAllCaps="true"
         android:gravity="center"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toEndOf="@id/date_added"
-        />
-    <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/imageview"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/date_added"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintStart_toEndOf="@id/date_added" />
 
+        <TextView
+            android:id="@+id/date_modified"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:layout_marginStart="5dp"
+            android:textAllCaps="true"
+            android:text="@string/date_modified"
+            android:gravity="center"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/date_added" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <TextView
+            android:id="@+id/date_modified_value"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:layout_marginStart="5dp"
+            android:gravity="center"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/date_modified"
+            app:layout_constraintTop_toBottomOf="@id/date_added_value" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/durationParent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/date_modified">
+
+            <TextView
+                android:id="@+id/duration"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_marginStart="5dp"
+                android:text="@string/duration"
+                android:gravity="center"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/durationValue"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_marginStart="5dp"
+                android:gravity="center"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/duration"
+                app:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/albumParent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/durationParent">
+
+            <TextView
+                android:id="@+id/album"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_marginStart="5dp"
+                android:text="@string/album"
+                android:gravity="center"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/albumValue"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_marginStart="5dp"
+                android:gravity="center"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/album"
+                app:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/dimensionParent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/albumParent">
+
+            <TextView
+                android:id="@+id/width"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_marginStart="5dp"
+                android:text="@string/width"
+                android:gravity="center"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/widthValue"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_marginStart="5dp"
+                android:gravity="center"
+                app:layout_constraintEnd_toStartOf="@id/height"
+                app:layout_constraintStart_toEndOf="@id/width"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/height"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_marginStart="5dp"
+                android:text="@string/height"
+                android:gravity="center"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toStartOf="@id/heightValue"
+                app:layout_constraintStart_toEndOf="@id/widthValue"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/heightValue"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_marginStart="5dp"
+                android:gravity="center"
+                app:layout_constraintStart_toEndOf="@id/height"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="400dp"
+            android:id="@+id/imageview"
+            android:layout_marginTop="20dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/dimensionParent"
+            app:layout_constraintEnd_toEndOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

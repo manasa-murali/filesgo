@@ -4,5 +4,5 @@ import com.example.filesgo.model.FileData
 
 interface OnDetailsClicked {
 
-    fun onImageClicked(fileData: FileData)
+    fun onItemClicked(fileData: FileData)
 }

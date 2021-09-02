@@ -27,7 +27,9 @@ class FileRepository(private val contentResolver: ContentResolver) : IRepository
             _ID,
             DATA,
             DATE_ADDED,
-            DURATION
+            DURATION,
+            DATE_MODIFIED,
+            ALBUM
         )
         //Retrieving all files
         val filesList =
@@ -46,6 +48,10 @@ class FileRepository(private val contentResolver: ContentResolver) : IRepository
                     cursor.getColumnIndexOrThrow(DATA)
                 val dateAddedColumn =
                     cursor.getColumnIndexOrThrow(DATE_ADDED)
+                val dateModifiedColumn =
+                    cursor.getColumnIndexOrThrow(DATE_MODIFIED)
+                val albumColumn =
+                    cursor.getColumnIndexOrThrow(ALBUM)
                 val durationColumn =
                     cursor.getColumnIndexOrThrow(DURATION)
 
@@ -63,6 +69,7 @@ class FileRepository(private val contentResolver: ContentResolver) : IRepository
                                     cursor.getInt(widthColumn),
                                     cursor.getInt(heightColumn),
                                     cursor.getInt(dateAddedColumn),
+                                    cursor.getInt(dateModifiedColumn)
                                 ), extension, path)
                             filesDataList.add(fileData)
                         }
@@ -70,7 +77,9 @@ class FileRepository(private val contentResolver: ContentResolver) : IRepository
                             val fileData = FileData(id,displayName,
                                 Audio(
                                     cursor.getInt(durationColumn),
-                                    cursor.getInt(dateAddedColumn)
+                                    cursor.getInt(dateAddedColumn),
+                                    cursor.getInt(dateModifiedColumn),
+                                    cursor.getString(albumColumn)
                                 ), extension, path)
                             filesDataList.add(fileData)
                         }
@@ -78,7 +87,8 @@ class FileRepository(private val contentResolver: ContentResolver) : IRepository
                             val fileData = FileData(id,displayName,
                                 Video(
                                     cursor.getInt(durationColumn),
-                                    cursor.getInt(dateAddedColumn)
+                                    cursor.getInt(dateAddedColumn),
+                                    cursor.getInt(dateModifiedColumn)
                                 ), extension, path)
                             filesDataList.add(fileData)
                         }
