@@ -115,7 +115,7 @@ class FileSearchFragment : Fragment(R.layout.fragment_file_search), OnDetailsCli
         view.findViewById<Button>(R.id.fetch_files_button).setOnClickListener {
             view.findViewById<TextView>(R.id.searchResult).visibility = GONE
             view.findViewById<EditText>(R.id.search_edittext).setText("")
-            lifecycleScope.launch(Dispatchers.IO) {
+            lifecycleScope.launch(Dispatchers.Main) {
                 val check = TedPermission.create()
                     .setPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
                     .setDeniedMessage(Constants.GRANT_PERMISSION)
@@ -146,13 +146,25 @@ class FileSearchFragment : Fragment(R.layout.fragment_file_search), OnDetailsCli
             if (viewModel.uiDataFlow.value.uiState is MyUIState.Success &&
                 viewModel.uiDataFlow.value.isSearchEnabled
             ) {
-                viewModel.writeToFile()
-                if (viewModel.uiDataFlow.value.searchResult.filesFound.isNotEmpty()) {
-                    Toast.makeText(requireContext(), Constants.FILES_WRITTEN, Toast.LENGTH_LONG)
-                        .show()
-                } else {
-                    Toast.makeText(requireContext(), Constants.FILES_NOT_WRITTEN, Toast.LENGTH_LONG)
-                        .show()
+                lifecycleScope.launch(Dispatchers.Main) {
+                    val check = TedPermission.create()
+                        .setPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        .setDeniedMessage(Constants.GRANT_PERMISSION)
+                        .check()
+                    if (check.isGranted) {
+                        viewModel.writeToFile()
+                        if (viewModel.uiDataFlow.value.searchResult.filesFound.isNotEmpty()) {
+                            Toast.makeText(requireContext(),
+                                Constants.FILES_WRITTEN,
+                                Toast.LENGTH_LONG)
+                                .show()
+                        } else {
+                            Toast.makeText(requireContext(),
+                                Constants.FILES_NOT_WRITTEN,
+                                Toast.LENGTH_LONG)
+                                .show()
+                        }
+                    }
                 }
             }
         }
