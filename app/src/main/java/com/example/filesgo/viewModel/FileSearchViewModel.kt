@@ -82,14 +82,16 @@ constructor(
                     AppState(isSearchEnabled = uiDataFlow.value.isSearchEnabled,
                         uiState = uiDataFlow.value.uiState,
                         sortOrder = sortOrder,
-                        searchResult = sortedFiles)
+                        searchResult = sortedFiles,
+                        isSorting = true)
                 )
             } else {
                 mutableAppStateFlow.emit(
                     AppState(isSearchEnabled = uiDataFlow.value.isSearchEnabled,
                         uiState = MyUIState.Success(sortedFiles),
                         sortOrder = sortOrder,
-                        searchResult = uiDataFlow.value.searchResult)
+                        searchResult = uiDataFlow.value.searchResult,
+                        isSorting = true)
                 )
             }
         }

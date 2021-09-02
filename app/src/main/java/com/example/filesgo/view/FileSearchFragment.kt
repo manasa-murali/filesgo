@@ -6,6 +6,8 @@ import android.os.Bundle
 import android.view.View
 import android.view.View.GONE
 import android.widget.*
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -23,6 +25,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import kotlin.random.Random
 
 
 @AndroidEntryPoint
@@ -30,6 +33,7 @@ class FileSearchFragment : Fragment(R.layout.fragment_file_search), OnDetailsCli
     AdapterView.OnItemSelectedListener {
 
     lateinit var viewModel: FileSearchViewModel
+    lateinit var notificationManager: NotificationManagerCompat
 
     @SuppressLint("SetTextI18n")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -52,6 +56,9 @@ class FileSearchFragment : Fragment(R.layout.fragment_file_search), OnDetailsCli
             spinner.adapter = adapter
         }
         spinner.onItemSelectedListener = this
+
+        notificationManager = NotificationManagerCompat.from(requireContext())
+
         lifecycleScope.launchWhenCreated {
             viewModel.uiDataFlow.collect { appState ->
                 when (appState.uiState) {
@@ -76,8 +83,14 @@ class FileSearchFragment : Fragment(R.layout.fragment_file_search), OnDetailsCli
                             (adapter as FilesAdapter).submitList(appState.searchResult)
                             val searchResultCount = view.findViewById<TextView>(R.id.searchResult)
                             searchResultCount.visibility = View.VISIBLE
+                            val filesFound =
+                                (viewModel.uiDataFlow.value.searchResult.size).toString()
                             searchResultCount.text =
-                                Constants.FILES_FOUND + (viewModel.uiDataFlow.value.searchResult.size).toString()
+                                Constants.FILES_FOUND + filesFound
+                            if (!appState.isSorting) {
+                                constructNotification(filesFound)
+                            }
+
                         } else {
                             view.findViewById<TextView>(R.id.searchResult).visibility = View.GONE
                             (adapter as FilesAdapter).submitList(appState.uiState.myUIDataList)
@@ -121,6 +134,19 @@ class FileSearchFragment : Fragment(R.layout.fragment_file_search), OnDetailsCli
                 viewModel.cancelSearch()
             }
         }
+    }
+
+    private fun constructNotification(filesFound: String) {
+        val notificationBuilder = NotificationCompat.Builder(requireContext(), Constants.CHANNEL_ID)
+        val notification = notificationBuilder.setSmallIcon(R.drawable.ic_baseline_search_24)
+            .setContentTitle(Constants.SEARCH_RESULT)
+            .setContentText(Constants.FILES_FOUND + filesFound)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+            .build()
+
+        notificationManager.notify(Random.nextInt(), notification)
+
     }
 
     override fun onImageClicked(fileData: FileData) {
