@@ -133,4 +133,14 @@ constructor(
             )
         }
     }
+
+    fun writeToFile() {
+        if (uiDataFlow.value.uiState is MyUIState.Success
+            && uiDataFlow.value.searchResult.filesFound.isNotEmpty()
+        ) {
+            viewModelScope.launch(dispatcher) {
+                fileRepository.writeToFile(uiDataFlow.value.searchResult.filesFound)
+            }
+        }
+    }
 }

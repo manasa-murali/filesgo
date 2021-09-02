@@ -4,8 +4,7 @@
     <string name="file_path">FILE PATH</string>
     <string name="duration">DURATION</string>
     <string name="details">DETAILS</string>
-    <string name="search_button_text">Search</string>
-    <string name="cancel_button_text">Cancel</string>
+    <string name="write_button_text">WRITE</string>
     <string name="fetch_button">Fetch Files</string>
     <string name="date_added">Date Added</string>
 </resources>

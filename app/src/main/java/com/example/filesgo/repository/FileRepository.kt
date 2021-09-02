@@ -1,12 +1,15 @@
 package com.example.filesgo.repository
 
 import android.content.ContentResolver
+import android.content.ContentValues
+import android.os.Environment
 import android.provider.MediaStore
 import android.provider.MediaStore.Files.FileColumns.*
 import com.example.filesgo.model.Audio
 import com.example.filesgo.model.FileData
 import com.example.filesgo.model.Image
 import com.example.filesgo.model.Video
+import java.nio.charset.Charset
 
 class FileRepository(private val contentResolver: ContentResolver) : IRepository {
 
@@ -93,6 +96,25 @@ class FileRepository(private val contentResolver: ContentResolver) : IRepository
     ): List<FileData> {
         return filesList.filter {
             it.name.contains(searchString)
+        }
+    }
+
+    override suspend fun writeToFile(filesFound: List<FileData>) {
+        val contentUri = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL)
+        val values = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, "Search Result")
+            put(MediaStore.MediaColumns.MIME_TYPE, "text/plain")
+            put(MediaStore.MediaColumns.RELATIVE_PATH,
+                Environment.DIRECTORY_DOCUMENTS + "/My Files Go")
+        }
+        contentResolver.insert(contentUri, values)?.also { uri ->
+            contentResolver.openOutputStream(uri).use { outputStream ->
+                filesFound.forEach {
+                    outputStream?.write((it.name + "\n").toByteArray(Charset.defaultCharset()))
+                }
+                outputStream?.close()
+            }
+
         }
     }
 }

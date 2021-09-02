@@ -125,7 +125,7 @@ class FileSearchFragment : Fragment(R.layout.fragment_file_search), OnDetailsCli
                 }
             }
         }
-        view.findViewById<Button>(R.id.search_button).setOnClickListener {
+        view.findViewById<ImageButton>(R.id.search_button).setOnClickListener {
             lifecycleScope.launch(Dispatchers.IO) {
                 if (viewModel.uiDataFlow.value.uiState is MyUIState.Success) {
                     val searchString =
@@ -136,10 +136,18 @@ class FileSearchFragment : Fragment(R.layout.fragment_file_search), OnDetailsCli
                 }
             }
         }
-        view.findViewById<Button>(R.id.cancel_button).setOnClickListener {
+        view.findViewById<ImageButton>(R.id.cancel_button).setOnClickListener {
             if (viewModel.uiDataFlow.value.uiState is MyUIState.Success) {
                 view.findViewById<EditText>(R.id.search_edittext).setText("")
                 viewModel.cancelSearch()
+            }
+        }
+        view.findViewById<Button>(R.id.write_button).setOnClickListener {
+            if (viewModel.uiDataFlow.value.uiState is MyUIState.Success &&
+                viewModel.uiDataFlow.value.isSearchEnabled
+            ) {
+                viewModel.writeToFile()
+                Toast.makeText(requireContext(), Constants.FILES_WRITTEN, Toast.LENGTH_LONG).show()
             }
         }
     }
