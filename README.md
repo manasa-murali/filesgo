@@ -26,3 +26,4 @@
 ### UI
 * [FileSearchFragment](https://github.com/manasa-murali/filesgo/blob/master/app/src/main/java/com/example/filesgo/view/FileSearchFragment.kt) - List all files, search result and write to text option
 * [DetailsFragment](https://github.com/manasa-murali/filesgo/blob/master/app/src/main/java/com/example/filesgo/view/DetailsFragment.kt) - Displays Additional details regarding the file. If it is an image/GIF , it loads the Preview
+* Additional - Sort Option to order list Alphabetically, Chronologically and by Extension. Also maintains sort order while writing search results to file 
