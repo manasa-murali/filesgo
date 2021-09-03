@@ -24,7 +24,6 @@ class FileRepository(private val contentResolver: ContentResolver) : IRepository
             MEDIA_TYPE,
             WIDTH,
             HEIGHT,
-            _ID,
             DATA,
             DATE_ADDED,
             DURATION,

@@ -53,10 +53,11 @@ class DetailsFragment : Fragment(R.layout.fragment_details) {
                                         View.VISIBLE
 
                                     val audioData = appState.fileDetails.fileType
-                                    val date = Date(audioData.dateCreated.toLong()).toString()
+                                    val date =
+                                        Date(audioData.dateCreated.toLong() * 1000).toString()
                                     view.findViewById<TextView>(R.id.date_added_value).text = date
                                     val dateModified =
-                                        Date(audioData.dateModified.toLong()).toString()
+                                        Date(audioData.dateModified.toLong() * 1000).toString()
                                     view.findViewById<TextView>(R.id.date_modified_value).text =
                                         dateModified
                                     view.findViewById<TextView>(R.id.durationValue).text =
@@ -73,11 +74,12 @@ class DetailsFragment : Fragment(R.layout.fragment_details) {
                                     view.findViewById<ConstraintLayout>(R.id.dimensionParent).visibility =
                                         View.VISIBLE
                                     val imageData = appState.fileDetails.fileType
-                                    val dateAdded = Date(imageData.dateCreated.toLong()).toString()
+                                    val dateAdded =
+                                        Date(imageData.dateCreated.toLong() * 1000).toString()
                                     view.findViewById<TextView>(R.id.date_added_value).text =
                                         dateAdded
                                     val dateModified =
-                                        Date(imageData.dateModified.toLong()).toString()
+                                        Date(imageData.dateModified.toLong() * 1000).toString()
                                     view.findViewById<TextView>(R.id.date_modified_value).text =
                                         dateModified
                                     view.findViewById<TextView>(R.id.widthValue).text =
@@ -109,11 +111,12 @@ class DetailsFragment : Fragment(R.layout.fragment_details) {
                                     view.findViewById<ConstraintLayout>(R.id.durationParent).visibility =
                                         View.VISIBLE
                                     val videoData = appState.fileDetails.fileType
-                                    val date = Date(videoData.dateCreated.toLong()).toString()
+                                    val date =
+                                        Date(videoData.dateCreated.toLong() * 1000).toString()
                                     view.findViewById<TextView>(R.id.date_added_value).text = date
 
                                     val dateModified =
-                                        Date(videoData.dateModified.toLong()).toString()
+                                        Date(videoData.dateModified.toLong() * 1000).toString()
                                     view.findViewById<TextView>(R.id.date_modified_value).text =
                                         dateModified
 

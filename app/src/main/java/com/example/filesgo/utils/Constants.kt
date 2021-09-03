@@ -11,9 +11,9 @@ object Constants {
     const val SEARCH_RESULT = "SEARCH RESULT"
 
     fun convertSectoHMS(duration: Int): String {
-        val hours = duration / 3600
-        val minutes = (hours) / 60
-        val seconds = duration % 60
+        val hours = duration / 3600000
+        val minutes = (duration / 60000) % 60000
+        val seconds = (duration % 60000) / 1000
         val stringBuilder = StringBuilder()
         if (hours != 0) {
             stringBuilder.append(hours).append(" H:")
