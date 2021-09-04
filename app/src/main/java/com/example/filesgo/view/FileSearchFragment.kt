@@ -151,10 +151,17 @@ class FileSearchFragment : Fragment(R.layout.fragment_file_search), OnDetailsCli
             }
         }
         view.findViewById<ImageButton>(R.id.search_button).setOnClickListener {
+            val searchString =
+                view.findViewById<EditText>(R.id.search_edittext).text.toString()
+            if (searchString.isEmpty() && viewModel.uiDataFlow.value.uiState !is MyUIState.Initial) {
+                Toast.makeText(requireContext(),
+                    Constants.EMPTY_SEARCH,
+                    Toast.LENGTH_LONG)
+                    .show()
+            }
             lifecycleScope.launch(Dispatchers.IO) {
                 if (viewModel.uiDataFlow.value.uiState is MyUIState.Success) {
-                    val searchString =
-                        view.findViewById<EditText>(R.id.search_edittext).text.toString()
+
                     if (searchString.isNotEmpty()) {
                         viewModel.searchForFiles(searchString)
                     }
@@ -168,6 +175,14 @@ class FileSearchFragment : Fragment(R.layout.fragment_file_search), OnDetailsCli
             }
         }
         view.findViewById<Button>(R.id.write_button).setOnClickListener {
+            val searchString =
+                view.findViewById<EditText>(R.id.search_edittext).text.toString()
+            if (searchString.isEmpty() && viewModel.uiDataFlow.value.uiState !is MyUIState.Initial) {
+                Toast.makeText(requireContext(),
+                    Constants.EMPTY_WRITE,
+                    Toast.LENGTH_LONG)
+                    .show()
+            }
             if (viewModel.uiDataFlow.value.uiState is MyUIState.Success &&
                 viewModel.uiDataFlow.value.isSearchEnabled
             ) {

@@ -9,6 +9,8 @@ object Constants {
     const val FILES_NOT_WRITTEN: String = "Nothing to Write"
     const val CHANNEL_ID = "CHANNEL1"
     const val SEARCH_RESULT = "SEARCH RESULT"
+    const val EMPTY_SEARCH: String = "Search String Empty. Type to Search"
+    const val EMPTY_WRITE: String = "Search to Write Results"
 
     fun convertSectoHMS(duration: Int): String {
         val hours = duration / 3600000
