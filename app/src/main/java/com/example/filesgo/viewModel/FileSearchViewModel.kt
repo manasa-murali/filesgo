@@ -143,4 +143,11 @@ constructor(
             }
         }
     }
+
+    fun refreshLayout() {
+        if (!uiDataFlow.value.isSearchEnabled) {
+            loadFilesFromDevice()
+        }
+
+    }
 }

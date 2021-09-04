@@ -13,6 +13,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.filesgo.MainActivity
 import com.example.filesgo.R
 import com.example.filesgo.model.FileData
@@ -62,23 +63,47 @@ class FileSearchFragment : Fragment(R.layout.fragment_file_search), OnDetailsCli
 
         lifecycleScope.launchWhenCreated {
             var oldState = viewModel.uiDataFlow.value
+            if (oldState.uiState == viewModel.uiDataFlow.value.uiState) {
+                view.findViewById<SwipeRefreshLayout>(R.id.refresh_layout).isRefreshing =
+                    false
+            }
             viewModel.uiDataFlow.collect { appState ->
                 when (appState.uiState) {
                     is MyUIState.Failure -> {
+                        if (oldState.uiState !is MyUIState.Initial) {
+                            view.findViewById<SwipeRefreshLayout>(R.id.refresh_layout).isEnabled =
+                                true
+                        }
+                        view.findViewById<SwipeRefreshLayout>(R.id.refresh_layout).isRefreshing =
+                            false
                         recyclerView.visibility = View.GONE
                         view.findViewById<TextView>(R.id.error_text).visibility = View.VISIBLE
                         view.findViewById<TextView>(R.id.error_text).text = appState.uiState.error
                     }
                     MyUIState.Initial -> {
+                        view.findViewById<SwipeRefreshLayout>(R.id.refresh_layout).isEnabled = false
                         view.findViewById<TextView>(R.id.error_text).visibility = View.GONE
                         recyclerView.visibility = View.GONE
 
                     }
                     MyUIState.Loading -> {
-                        view.findViewById<TextView>(R.id.error_text).visibility = View.GONE
-                        recyclerView.visibility = View.GONE
+                        if (oldState.uiState is MyUIState.Success || oldState.uiState is MyUIState.Failure) {
+                            view.findViewById<SwipeRefreshLayout>(R.id.refresh_layout).isEnabled =
+                                true
+                            view.findViewById<SwipeRefreshLayout>(R.id.refresh_layout).isRefreshing =
+                                true
+                            view.findViewById<TextView>(R.id.error_text).visibility = View.GONE
+                            recyclerView.visibility = View.GONE
+                        } else if (oldState.uiState is MyUIState.Initial) {
+                            view.findViewById<SwipeRefreshLayout>(R.id.refresh_layout).isEnabled =
+                                false
+                        }
                     }
                     is MyUIState.Success -> {
+                        view.findViewById<SwipeRefreshLayout>(R.id.refresh_layout).isEnabled =
+                            !viewModel.uiDataFlow.value.isSearchEnabled && oldState.uiState !is MyUIState.Initial
+                        view.findViewById<SwipeRefreshLayout>(R.id.refresh_layout).isRefreshing =
+                            false
                         view.findViewById<TextView>(R.id.error_text).visibility = View.GONE
                         recyclerView.visibility = View.VISIBLE
                         if (appState.isSearchEnabled) {
@@ -167,6 +192,9 @@ class FileSearchFragment : Fragment(R.layout.fragment_file_search), OnDetailsCli
                     }
                 }
             }
+        }
+        view.findViewById<SwipeRefreshLayout>(R.id.refresh_layout).setOnRefreshListener {
+            viewModel.refreshLayout()
         }
     }
 
