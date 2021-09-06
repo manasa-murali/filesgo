@@ -145,7 +145,8 @@ constructor(
                     currentState.copy(
                         fetchFilesState = MyUIState.Success(
                             filesList = sortedFiles
-                        )
+                        ),
+                        sortOrder = sortOrder
                     )
                 )
             }
@@ -209,15 +210,6 @@ constructor(
         loadFilesFromDevice()
     }
 
-    fun displayDetails(fileData: FileData) {
-        viewModelScope.launch(dispatcher) {
-            mutableAppState.emit(
-                listingDataFlow.value.copy(
-                    fileDetails = fileData
-                )
-            )
-        }
-    }
 
     fun refreshLayout() {
         loadFilesFromDevice()
