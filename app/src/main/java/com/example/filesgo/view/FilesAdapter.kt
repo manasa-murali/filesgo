@@ -15,7 +15,7 @@ import com.example.filesgo.model.FileData
 
 class FilesAdapter(
     private var filesList: List<FileData>,
-    private var parentFragment: FileSearchFragment,
+    private var ITalkToFragment: ITalkToFragment,
 ) :
     RecyclerView.Adapter<FilesAdapter.FileViewHolder>() {
 
@@ -27,46 +27,40 @@ class FilesAdapter(
     }
 
     override fun onBindViewHolder(holder: FileViewHolder, position: Int) {
-        val fileData = filesList[position]
-        holder.fileNameTextView.text = fileData.name
-        holder.filePathTextView.text = fileData.path
-        if (!searchString.isNullOrEmpty()) {
-            val startIndex = fileData.name.indexOf(searchString)
-            if (startIndex != -1) {
-                val editableText = SpannableStringBuilder()
-                editableText.append(fileData.name)
-                editableText.setSpan(BackgroundColorSpan(Color.BLUE),
-                    startIndex,
-                    startIndex + searchString.length,
-                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                holder.fileNameTextView.text = editableText
-            }
+        val context = holder.itemView.context
+        val file = filesList[position]
+        holder.fileNameTextView.text = context.getString(R.string.file_name_tag, file.name)
+        holder.filePathTextView.text = context.getString(R.string.file_path_tag, file.path)
+        val startIndex = file.name.lowercase().indexOf(searchString)
+        if (startIndex != -1) {
+            val editableText = SpannableStringBuilder()
+            editableText.append(file.name)
+            editableText.setSpan(
+                BackgroundColorSpan(Color.BLUE),
+                startIndex,
+                startIndex + searchString.length,
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            holder.fileNameTextView.text = editableText
         }
         holder.detailsButton.setOnClickListener {
-            parentFragment.onItemClicked(fileData)
+            ITalkToFragment.onItemClicked(file)
         }
-
-    }
-
-
-
-    fun setAdapterData(
-        filesList: List<FileData>,
-        searchString: String,
-        fileSearchFragment: FileSearchFragment,
-    ) {
-        this.filesList = filesList
-        this.searchString = searchString
-        this.parentFragment = fileSearchFragment
     }
 
     override fun getItemCount(): Int {
         return filesList.size
     }
 
+    fun submitItems(filesList: List<FileData>, searchString: String) {
+        this.filesList = filesList
+        this.searchString = searchString
+        notifyDataSetChanged()
+    }
+
     class FileViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val fileNameTextView: TextView = itemView.findViewById(R.id.fileNameValue)
-        val filePathTextView: TextView = itemView.findViewById(R.id.filePathValue)
+        val fileNameTextView: TextView = itemView.findViewById(R.id.file_name)
+        val filePathTextView: TextView = itemView.findViewById(R.id.file_path)
         val detailsButton: Button = itemView.findViewById(R.id.details_button)
     }
 }

@@ -1,14 +1,16 @@
 <resources>
     <string name="app_name">Filesgo</string>
-    <string name="file_name">FILE NAME</string>
-    <string name="file_path">FILE PATH</string>
-    <string name="duration">DURATION</string>
-    <string name="album">ALBUM</string>
-    <string name="width">WIDTH</string>
-    <string name="height">HEIGHT</string>
-    <string name="details">DETAILS</string>
     <string name="write_button_text">WRITE</string>
-    <string name="fetch_button">Fetch Files</string>
-    <string name="date_added">Date Added</string>
-    <string name="date_modified">Date Modified</string>
+    <string name="denied_permission">Permission Denied,Grant access through Settings</string>
+    <string name="empty_search_string">Search String Empty. Type to Search</string>
+    <string name="files_tag">Files found: %1$s</string>
+    <string name="search">Search</string>
+    <string name="file_name_tag">File name: %1$s</string>
+    <string name="file_path_tag">Path: %1$s</string>
+    <string name="file_size_tag">File size: %1$s</string>
+    <string name="file_created_tag">Created on: %1$s</string>
+    <string name="file_modified_tag">Modified on: %1$s</string>
+    <string name="something_went_wrong">Something went wrong</string>
+    <string name="empty_files">Empty files. Nothing to display</string>
+    <string name="details">Details</string>
 </resources>

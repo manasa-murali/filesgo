@@ -1,15 +1,12 @@
 package com.example.filesgo.viewModel
 
-import android.text.SpannableStringBuilder
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.filesgo.model.Audio
 import com.example.filesgo.model.FileData
-import com.example.filesgo.model.Image
-import com.example.filesgo.model.Video
 import com.example.filesgo.repository.FileRepository
-import com.example.filesgo.utils.Action
-import com.example.filesgo.utils.Constants
+import com.example.filesgo.utils.SortBy
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -27,127 +24,223 @@ constructor(
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
 
-    private val mutableAppStateFlow = MutableStateFlow(AppState(uiState = MyUIState.Initial))
+    private val mutableAppState = MutableStateFlow(AppState())
 
-    val uiDataFlow = mutableAppStateFlow.asStateFlow()
+    val listingDataFlow = mutableAppState.asStateFlow()
+
+    private val mutableDetailsState = MutableLiveData<FileData>()
+
+    val detailsState: LiveData<FileData> = mutableDetailsState
 
     fun loadFilesFromDevice() {
+        val currentState = listingDataFlow.value
         viewModelScope.launch(dispatcher) {
-            mutableAppStateFlow.emit(
-                AppState(uiState = MyUIState.Loading)
+
+            //Emit fetching State
+            mutableAppState.emit(
+                currentState.copy(
+                    fetchFilesState = MyUIState.Fetching
+                )
             )
+
             val filesList = fileRepository.loadFilesFromStorage()
+
+            //Emit processing State
+            mutableAppState.emit(
+                currentState.copy(
+                    fetchFilesState = MyUIState.Processing
+                )
+            )
+
             if (filesList.isNotEmpty()) {
-                sortFilesBy(uiDataFlow.value.sortOrder, filesList)
-            } else {
-                mutableAppStateFlow.emit(
-                    AppState(uiState = MyUIState.Failure(
-                        Constants.FILE_FETCH_ERROR
-                    ))
+                val sortedFiles = sort(
+                    currentState.sortOrder,
+                    filesList
                 )
-            }
-        }
-    }
 
-    fun sortFilesBy(sortOrder: Action.SortBy, filesList: List<FileData>) {
-        viewModelScope.launch(dispatcher) {
-            val sortedFiles = when (sortOrder) {
-                Action.SortBy.ALPHABET -> {
-                    filesList.sortedBy {
-                        val fileNameList = it.name.split(".")
-                        val subList = fileNameList.subList(0, fileNameList.size - 1)
-                        val stringBuilder = SpannableStringBuilder()
-                        subList.forEach { fileNameEntry -> stringBuilder.append(fileNameEntry) }
-                        stringBuilder.toString()
-                    }
-                }
-                Action.SortBy.CHRONOLOGY -> {
-                    filesList.sortedBy {
-                        when (it.fileType) {
-                            is Audio -> it.fileType.dateCreated
-                            is Image -> it.fileType.dateCreated
-                            is Video -> it.fileType.dateCreated
-                        }
-                    }
-                }
-                Action.SortBy.EXTENSION -> {
-                    filesList.sortedBy {
-                        it.extension.lowercase(Locale.getDefault())
-                    }
-                }
-            }
-            if (uiDataFlow.value.isSearchEnabled) {
-                mutableAppStateFlow.emit(
-                    AppState(isSearchEnabled = uiDataFlow.value.isSearchEnabled,
-                        uiState = uiDataFlow.value.uiState,
-                        sortOrder = sortOrder,
-                        searchResult = SearchResult(uiDataFlow.value.searchResult.searchString,
-                            sortedFiles),
-                        isSorting = true)
+                //Emit success state
+                mutableAppState.emit(
+                    currentState.copy(
+                        fetchFilesState = MyUIState.Success(
+                            filesList = sortedFiles
+                        )
+                    )
                 )
             } else {
-                mutableAppStateFlow.emit(
-                    AppState(uiState = MyUIState.Success(sortedFiles),
-                        sortOrder = sortOrder,
-                        isSorting = true)
-                )
-            }
-        }
-    }
-
-    fun searchForFiles(searchString: String) {
-        viewModelScope.launch(dispatcher) {
-            val currentState = uiDataFlow.value
-            if (currentState.uiState is MyUIState.Success) {
-                val filesFound =
-                    fileRepository.searchFiles(searchString, currentState.uiState.myUIDataList)
-                mutableAppStateFlow.emit(
-                    AppState(
-                        isSearchEnabled = true,
-                        uiState = uiDataFlow.value.uiState,
-                        searchResult = SearchResult(searchString, filesFound),
-                        sortOrder = uiDataFlow.value.sortOrder
+                //Emit empty fils state
+                mutableAppState.emit(
+                    currentState.copy(
+                        fetchFilesState = MyUIState.EmptyFiles
                     )
                 )
             }
         }
     }
 
-    fun cancelSearch() {
-        viewModelScope.launch(dispatcher) {
-            mutableAppStateFlow.emit(
-                AppState(isSearchEnabled = false,
-                    uiState = uiDataFlow.value.uiState,
-                    sortOrder = uiDataFlow.value.sortOrder,
-                    searchResult = SearchResult("", emptyList()))
-            )
+    private fun sort(sortOrder: SortBy, filesList: List<FileData>): List<FileData> {
+        val sortedList = when (sortOrder) {
+
+            SortBy.ALPHABET_A_Z -> {
+                filesList.sortedBy {
+                    val split = it.name.split(".")
+                    val dropLast = split.dropLast(1)
+                    val stringBuilder = StringBuilder()
+                    dropLast.forEach {
+                        stringBuilder.append(it)
+                    }
+                    stringBuilder.toString()
+                }
+            }
+
+            SortBy.ALPHABET_Z_A -> {
+                filesList.sortedByDescending {
+                    val split = it.name.split(".")
+                    val dropLast = split.dropLast(1)
+                    val stringBuilder = StringBuilder()
+                    dropLast.forEach {
+                        stringBuilder.append(it)
+                    }
+                    stringBuilder.toString()
+                }
+            }
+
+            SortBy.CREATED_A_Z -> {
+                filesList.sortedBy {
+                    it.dateCreated
+                }
+            }
+
+            SortBy.CREATED_Z_A -> {
+                filesList.sortedByDescending {
+                    it.dateCreated
+                }
+            }
+
+            SortBy.EXTENSION_A_Z -> {
+                filesList.sortedBy {
+                    it.extension.lowercase(Locale.getDefault())
+                }
+            }
+
+            SortBy.EXTENSION_Z_A -> {
+                filesList.sortedByDescending {
+                    it.extension.lowercase(Locale.getDefault())
+                }
+            }
         }
+        return sortedList
+    }
+
+    fun sortBy(sortOrder: SortBy) {
+        viewModelScope.launch(dispatcher) {
+            val currentState = listingDataFlow.value
+            if (currentState.fetchFilesState is MyUIState.Success) {
+                val sortedFiles = sort(
+                    sortOrder,
+                    currentState.fetchFilesState.filesList
+                )
+                mutableAppState.emit(
+                    currentState.copy(
+                        fetchFilesState = MyUIState.Success(
+                            filesList = sortedFiles
+                        )
+                    )
+                )
+            }
+        }
+    }
+
+    fun search(searchStr: String) {
+        viewModelScope.launch(dispatcher) {
+            val currentState = listingDataFlow.value
+
+            //Emit processing State
+            mutableAppState.emit(
+                currentState.copy(
+                    fetchFilesState = MyUIState.Processing
+                )
+            )
+
+            //Search only if fecthing is success
+            if (currentState.fetchFilesState is MyUIState.Success) {
+                val filesFound =
+                    fileRepository.searchFiles(
+                        searchStr,
+                        currentState.fetchFilesState.filesList
+                    )
+
+                if (filesFound.isNotEmpty()) {
+                    //Emit success state
+                    mutableAppState.emit(
+                        currentState.copy(
+                            fetchFilesState = MyUIState.Success(
+                                filesList = filesFound
+                            )
+                        )
+                    )
+                } else {
+                    //Emit empty files state
+                    mutableAppState.emit(
+                        currentState.copy(
+                            fetchFilesState = MyUIState.EmptyFiles
+                        )
+                    )
+                }
+            } else {
+                //Emit fetching State
+                mutableAppState.emit(
+                    currentState.copy(
+                        fetchFilesState = MyUIState.Fetching
+                    )
+                )
+            }
+
+        }
+    }
+
+    fun clearSearch() {
+        loadFilesFromDevice()
     }
 
     fun displayDetails(fileData: FileData) {
         viewModelScope.launch(dispatcher) {
-            mutableAppStateFlow.emit(
-                uiDataFlow.value.copy(
+            mutableAppState.emit(
+                listingDataFlow.value.copy(
                     fileDetails = fileData
                 )
             )
         }
     }
 
-    fun writeToFile() {
-        if (uiDataFlow.value.uiState is MyUIState.Success
-            && uiDataFlow.value.searchResult.filesFound.isNotEmpty()
-        ) {
-            viewModelScope.launch(dispatcher) {
-                fileRepository.writeToFile(uiDataFlow.value.searchResult.filesFound)
+    fun refreshLayout() {
+        loadFilesFromDevice()
+    }
+
+    fun saveContent() {
+        val currentState = listingDataFlow.value
+        viewModelScope.launch(dispatcher) {
+            if (currentState.fetchFilesState is MyUIState.Success) {
+
+                //Emit processing State
+                mutableAppState.emit(
+                    currentState.copy(
+                        fetchFilesState = MyUIState.Processing
+                    )
+                )
+
+                fileRepository.writeToFile(currentState.fetchFilesState.filesList)
+
+                //Emit saved State
+                mutableAppState.emit(
+                    currentState.copy(
+                        fetchFilesState = MyUIState.Saved
+                    )
+                )
             }
         }
     }
 
-    fun refreshLayout() {
-        if (!uiDataFlow.value.isSearchEnabled) {
-            loadFilesFromDevice()
-        }
-
+    fun loadFileDetails(fileData: FileData) {
+        mutableDetailsState.postValue(fileData)
     }
 }

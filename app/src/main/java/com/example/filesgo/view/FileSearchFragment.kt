@@ -1,262 +1,231 @@
 package com.example.filesgo.view
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.os.Bundle
+import android.util.Log
 import android.view.View
-import android.view.View.GONE
 import android.widget.*
+import androidx.appcompat.widget.AppCompatEditText
+import androidx.appcompat.widget.AppCompatImageButton
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.example.filesgo.MainActivity
 import com.example.filesgo.R
 import com.example.filesgo.model.FileData
-import com.example.filesgo.utils.Action
 import com.example.filesgo.utils.Constants
+import com.example.filesgo.utils.SortBy
 import com.example.filesgo.viewModel.FileSearchViewModel
 import com.example.filesgo.viewModel.MyUIState
+import com.gun0912.tedpermission.TedPermissionResult
 import com.gun0912.tedpermission.coroutine.TedPermission
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.launch
-import kotlin.random.Random
-
 
 @AndroidEntryPoint
-class FileSearchFragment : Fragment(R.layout.fragment_file_search), OnDetailsClicked,
-    AdapterView.OnItemSelectedListener {
+class FileSearchFragment : Fragment(R.layout.fragment_file_search) {
 
-    lateinit var viewModel: FileSearchViewModel
-    lateinit var notificationManager: NotificationManagerCompat
+    private var notificationManager: NotificationManagerCompat? = null
 
-    @SuppressLint("SetTextI18n")
+    val viewModel: FileSearchViewModel by activityViewModels()
+
+    private val TAG: String = "FileSearchFragment"
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel = (requireActivity() as MainActivity).viewModel
+        subscribeToViewModel(view)
+        setUpSearch(view)
+        setUpRefreshView(view)
+        setUpSortOrderView(view)
+        setUpNotificationManager(view)
+        setUpWriteView(view)
+    }
 
-        val recyclerView = view.findViewById<RecyclerView>(R.id.file_search_list)
-        recyclerView.layoutManager = LinearLayoutManager(context)
-
-        var adapter = recyclerView.adapter
-        if (adapter == null) {
-            adapter = FilesAdapter(arrayListOf(), this)
-            recyclerView.adapter = adapter
-        }
-        val spinner = view.findViewById<Spinner>(R.id.sort_order_spinner)
-        ArrayAdapter.createFromResource(view.context,
-            R.array.sort_array,
-            android.R.layout.simple_spinner_item).also { adapter ->
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            spinner.adapter = adapter
-        }
-        spinner.onItemSelectedListener = this
-
-
-        notificationManager = NotificationManagerCompat.from(requireContext())
-
-        lifecycleScope.launchWhenCreated {
-            var oldState = viewModel.uiDataFlow.value
-            if (oldState.uiState == viewModel.uiDataFlow.value.uiState) {
-                view.findViewById<SwipeRefreshLayout>(R.id.refresh_layout).isRefreshing =
-                    false
-            }
-            viewModel.uiDataFlow.collect { appState ->
-                when (appState.uiState) {
-                    is MyUIState.Failure -> {
-                        if (oldState.uiState !is MyUIState.Initial) {
-                            view.findViewById<SwipeRefreshLayout>(R.id.refresh_layout).isEnabled =
-                                true
-                        }
-                        view.findViewById<SwipeRefreshLayout>(R.id.refresh_layout).isRefreshing =
-                            false
-                        recyclerView.visibility = View.GONE
-                        view.findViewById<TextView>(R.id.error_text).visibility = View.VISIBLE
-                        view.findViewById<TextView>(R.id.error_text).text = appState.uiState.error
-                    }
-                    MyUIState.Initial -> {
-                        view.findViewById<SwipeRefreshLayout>(R.id.refresh_layout).isEnabled = false
-                        view.findViewById<TextView>(R.id.error_text).visibility = View.GONE
-                        recyclerView.visibility = View.GONE
-
-                    }
-                    MyUIState.Loading -> {
-                        if (oldState.uiState is MyUIState.Success || oldState.uiState is MyUIState.Failure) {
-                            view.findViewById<SwipeRefreshLayout>(R.id.refresh_layout).isEnabled =
-                                true
-                            view.findViewById<SwipeRefreshLayout>(R.id.refresh_layout).isRefreshing =
-                                true
-                            view.findViewById<TextView>(R.id.error_text).visibility = View.GONE
-                            recyclerView.visibility = View.GONE
-                        } else if (oldState.uiState is MyUIState.Initial) {
-                            view.findViewById<SwipeRefreshLayout>(R.id.refresh_layout).isEnabled =
-                                false
-                        }
-                    }
-                    is MyUIState.Success -> {
-                        view.findViewById<SwipeRefreshLayout>(R.id.refresh_layout).isEnabled =
-                            !viewModel.uiDataFlow.value.isSearchEnabled && oldState.uiState !is MyUIState.Initial
-                        view.findViewById<SwipeRefreshLayout>(R.id.refresh_layout).isRefreshing =
-                            false
-                        view.findViewById<TextView>(R.id.error_text).visibility = View.GONE
-                        recyclerView.visibility = View.VISIBLE
-                        if (appState.isSearchEnabled) {
-                            (recyclerView.adapter as FilesAdapter).setAdapterData(appState.searchResult.filesFound,
-                                appState.searchResult.searchString, this@FileSearchFragment)
-                            (recyclerView.adapter as FilesAdapter).notifyDataSetChanged()
-
-                            val searchResultCount =
-                                view.findViewById<TextView>(R.id.searchResult)
-                            searchResultCount.visibility = View.VISIBLE
-                            val filesFound =
-                                (viewModel.uiDataFlow.value.searchResult.filesFound.size).toString()
-                            searchResultCount.text =
-                                Constants.FILES_FOUND + filesFound
-                            if (!appState.isSorting && (oldState != appState && appState.fileDetails == null)) {
-                                constructNotification(filesFound)
-                            }
-                        } else {
-                            view.findViewById<TextView>(R.id.searchResult).visibility = View.GONE
-                            (recyclerView.adapter as FilesAdapter).setAdapterData(appState.uiState.myUIDataList,
-                                "", this@FileSearchFragment)
-                            (recyclerView.adapter as FilesAdapter).notifyDataSetChanged()
-                        }
-                        when (appState.sortOrder) {
-                            Action.SortBy.ALPHABET -> spinner.setSelection(1)
-                            Action.SortBy.CHRONOLOGY -> spinner.setSelection(2)
-                            Action.SortBy.EXTENSION -> spinner.setSelection(3)
-                        }
-                    }
-                }
-                oldState = appState
-            }
-        }
-        view.findViewById<Button>(R.id.fetch_files_button).setOnClickListener {
-            view.findViewById<TextView>(R.id.searchResult).visibility = GONE
-            view.findViewById<EditText>(R.id.search_edittext).setText("")
-            lifecycleScope.launch(Dispatchers.Main) {
-                val check = TedPermission.create()
-                    .setPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
-                    .setDeniedMessage(Constants.GRANT_PERMISSION)
-                    .check()
-                if (check.isGranted) {
-                    viewModel.loadFilesFromDevice()
-                }
-            }
-        }
-        view.findViewById<ImageButton>(R.id.search_button).setOnClickListener {
-            val searchString =
-                view.findViewById<EditText>(R.id.search_edittext).text.toString()
-            if (searchString.isEmpty() && viewModel.uiDataFlow.value.uiState !is MyUIState.Initial) {
-                Toast.makeText(requireContext(),
-                    Constants.EMPTY_SEARCH,
-                    Toast.LENGTH_LONG)
-                    .show()
-            }
-            lifecycleScope.launch(Dispatchers.IO) {
-                if (viewModel.uiDataFlow.value.uiState is MyUIState.Success) {
-
-                    if (searchString.isNotEmpty()) {
-                        viewModel.searchForFiles(searchString)
-                    }
-                }
-            }
-        }
-        view.findViewById<ImageButton>(R.id.cancel_button).setOnClickListener {
-            if (viewModel.uiDataFlow.value.uiState is MyUIState.Success) {
-                view.findViewById<EditText>(R.id.search_edittext).setText("")
-                viewModel.cancelSearch()
-            }
-        }
+    private fun setUpWriteView(view: View) {
         view.findViewById<Button>(R.id.write_button).setOnClickListener {
-            val searchString =
-                view.findViewById<EditText>(R.id.search_edittext).text.toString()
-            if (searchString.isEmpty() && viewModel.uiDataFlow.value.uiState !is MyUIState.Initial) {
-                Toast.makeText(requireContext(),
-                    Constants.EMPTY_WRITE,
-                    Toast.LENGTH_LONG)
-                    .show()
-            }
-            if (viewModel.uiDataFlow.value.uiState is MyUIState.Success &&
-                viewModel.uiDataFlow.value.isSearchEnabled
-            ) {
-                lifecycleScope.launch(Dispatchers.Main) {
-                    val check = TedPermission.create()
-                        .setPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                        .setDeniedMessage(Constants.GRANT_PERMISSION)
-                        .check()
-                    if (check.isGranted) {
-                        viewModel.writeToFile()
-                        if (viewModel.uiDataFlow.value.searchResult.filesFound.isNotEmpty()) {
-                            Toast.makeText(requireContext(),
-                                Constants.FILES_WRITTEN,
-                                Toast.LENGTH_LONG)
-                                .show()
-                        } else {
-                            Toast.makeText(requireContext(),
-                                Constants.FILES_NOT_WRITTEN,
-                                Toast.LENGTH_LONG)
-                                .show()
-                        }
-                    }
-                }
-            }
+            viewModel.saveContent()
         }
+    }
+
+    private fun setUpNotificationManager(view: View) {
+        notificationManager = NotificationManagerCompat.from(view.context)
+    }
+
+    private fun setUpSortOrderView(view: View) {
+        val spinner = view.findViewById<Spinner>(R.id.sort_order_spinner)
+        ArrayAdapter.createFromResource(
+            view.context,
+            R.array.sort_array,
+            android.R.layout.simple_spinner_item
+        ).also {
+            it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            spinner.adapter = it
+        }
+        spinner.onItemSelectedListener = getOnItemSelectedListener()
+    }
+
+    private fun getOnItemSelectedListener() = object : AdapterView.OnItemSelectedListener {
+        override fun onItemSelected(parent: AdapterView<*>, view: View?, pos: Int, id: Long) {
+
+            val sortOrder = when (pos) {
+                1 -> SortBy.ALPHABET_Z_A
+                2 -> SortBy.CREATED_Z_A
+                3 -> SortBy.CREATED_A_Z
+                4 -> SortBy.EXTENSION_A_Z
+                5 -> SortBy.EXTENSION_Z_A
+                else -> SortBy.ALPHABET_A_Z
+            }
+
+            viewModel.sortBy(sortOrder)
+        }
+
+        override fun onNothingSelected(p0: AdapterView<*>?) {
+
+        }
+
+    }
+
+    private fun setUpRefreshView(view: View) {
         view.findViewById<SwipeRefreshLayout>(R.id.refresh_layout).setOnRefreshListener {
+            view.findViewById<AppCompatEditText>(R.id.search_edittext).text?.clear()
             viewModel.refreshLayout()
         }
+    }
+
+    private fun setUpSearch(view: View) {
+        view.findViewById<AppCompatImageButton>(R.id.search_button).setOnClickListener {
+            val searchString =
+                view.findViewById<AppCompatEditText>(R.id.search_edittext).text.toString()
+            if (searchString.isNotEmpty()) {
+                viewModel.search(searchString.lowercase())
+            } else {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.empty_search_string),
+                    Toast.LENGTH_LONG
+                )
+                    .show()
+            }
+        }
+
+        view.findViewById<AppCompatImageButton>(R.id.clear_search).setOnClickListener {
+            viewModel.clearSearch()
+            view.findViewById<AppCompatEditText>(R.id.search_edittext).text?.clear()
+        }
+    }
+
+    private fun subscribeToViewModel(view: View) {
+        val errorStateUi = view.findViewById<TextView>(R.id.error_text)
+        val succesUi = view.findViewById<RecyclerView>(R.id.file_search_list)
+        lifecycleScope.launchWhenCreated {
+            viewModel.listingDataFlow.collect {
+                val fetchFilesState = it.fetchFilesState
+                when (fetchFilesState) {
+                    MyUIState.Initial -> {
+                        Log.i(TAG, "initial")
+                        val permissions = getPermissions()
+                        if (permissions.isGranted) {
+                            viewModel.loadFilesFromDevice()
+                        }
+                    }
+
+                    MyUIState.Fetching -> {
+                        setRefreshing(true, view)
+                        Log.i(TAG, "Fetching")
+                    }
+
+                    MyUIState.Processing -> {
+                        setRefreshing(true, view)
+                        Log.i(TAG, "Processing")
+                    }
+                    is MyUIState.Success -> {
+                        setRefreshing(false, view)
+                        Log.i(TAG, "Success ${fetchFilesState.filesList}")
+                        requireActivity().runOnUiThread {
+                            setSuccessUiState(view, fetchFilesState)
+                        }
+                        errorStateUi.visibility = View.GONE
+                        succesUi.visibility = View.VISIBLE
+                    }
+                    is MyUIState.Failure -> {
+                        setRefreshing(false, view)
+                        errorStateUi.visibility = View.VISIBLE
+                        errorStateUi.text = getString(R.string.something_went_wrong)
+                        succesUi.visibility = View.GONE
+                        Log.i(TAG, "Failure")
+                    }
+                    MyUIState.EmptyFiles -> {
+                        setRefreshing(false, view)
+                        errorStateUi.visibility = View.VISIBLE
+                        errorStateUi.text = getString(R.string.empty_files)
+                        succesUi.visibility = View.GONE
+                        Log.i(TAG, "Empty")
+                    }
+
+                    MyUIState.Saved -> {
+                        setRefreshing(false, view)
+                        Log.i(TAG, "Saved")
+                    }
+                }
+            }
+        }
+    }
+
+    private fun setRefreshing(isRefreshing: Boolean, view: View) {
+        requireActivity().runOnUiThread {
+            view.findViewById<SwipeRefreshLayout>(R.id.refresh_layout).isRefreshing = isRefreshing
+        }
+    }
+
+    private fun setSuccessUiState(view: View, successState: MyUIState.Success) {
+        val recyclerView = view.findViewById<RecyclerView>(R.id.file_search_list)
+        var currentAdapter = recyclerView.adapter
+        if (currentAdapter == null) {
+            currentAdapter = FilesAdapter(
+                filesList = successState.filesList,
+                ITalkToFragment = object : ITalkToFragment {
+                    override fun onItemClicked(fileData: FileData) {
+                        viewModel.loadFileDetails(fileData)
+                        if (findNavController().currentDestination?.id == R.id.fileSearchFragment) {
+                            findNavController().navigate(R.id.action_fileSearchFragment_to_detailsFragment)
+                        }
+                    }
+                }
+            )
+            recyclerView.adapter = currentAdapter
+        } else {
+            val searchString =
+                view.findViewById<AppCompatEditText>(R.id.search_edittext).text.toString()
+            (currentAdapter as FilesAdapter).submitItems(successState.filesList,
+                searchString.lowercase())
+        }
+        val count = successState.filesList.size.toString()
+        val searchCountView = view.findViewById<TextView>(R.id.searchResult)
+        searchCountView.text = getString(R.string.files_tag, count)
+        constructNotification(count)
+    }
+
+    private suspend fun getPermissions(): TedPermissionResult {
+        val permissionBuilder: TedPermission.Builder = TedPermission.create()
+        return permissionBuilder.setPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
+            .setDeniedMessage(getString(R.string.denied_permission))
+            .check()
     }
 
     private fun constructNotification(filesFound: String) {
         val notificationBuilder = NotificationCompat.Builder(requireContext(), Constants.CHANNEL_ID)
         val notification = notificationBuilder.setSmallIcon(R.drawable.ic_baseline_search_24)
-            .setContentTitle(Constants.SEARCH_RESULT)
-            .setContentText(Constants.FILES_FOUND + filesFound)
+            .setContentTitle(getString(R.string.search))
+            .setContentText(getString(R.string.files_tag, filesFound))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
             .build()
 
-        notificationManager.notify(Random.nextInt(), notification)
+        notificationManager?.notify(2105, notification)
 
-    }
-
-    override fun onItemClicked(fileData: FileData) {
-        viewModel.displayDetails(fileData)
-        if (findNavController().currentDestination?.id == R.id.fileSearchFragment) {
-            findNavController().navigate(R.id.action_fileSearchFragment_to_detailsFragment)
-        }
-    }
-
-    override fun onItemSelected(parent: AdapterView<*>?, view: View?, pos: Int, id: Long) {
-        if ((viewModel.uiDataFlow.value.uiState is MyUIState.Success)) {
-            val filesList = if (viewModel.uiDataFlow.value.isSearchEnabled) {
-                viewModel.uiDataFlow.value.searchResult.filesFound
-            } else {
-                (viewModel.uiDataFlow.value.uiState as MyUIState.Success).myUIDataList
-            }
-            val sortOrder = when (parent!!.getItemAtPosition(pos).toString()) {
-                Action.SortBy.ALPHABET.name -> {
-                    Action.SortBy.ALPHABET
-                }
-                Action.SortBy.CHRONOLOGY.name -> {
-                    Action.SortBy.CHRONOLOGY
-                }
-                Action.SortBy.EXTENSION.name -> {
-                    Action.SortBy.EXTENSION
-                }
-                else -> Action.SortBy.EXTENSION
-            }
-            viewModel.sortFilesBy(sortOrder, filesList)
-        }
-    }
-
-    override fun onNothingSelected(p0: AdapterView<*>?) {
-        TODO("Not yet implemented")
     }
 }

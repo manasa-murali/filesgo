@@ -6,19 +6,20 @@ data class FileData(
     val fileType: FileType,
     val extension: String,
     val path: String,
+    val size: Long,
+    val dateCreated: Long,
+    val dateModified: Long,
 )
 
-// Holds type of file and its metadata
-sealed class FileType
-data class Image(val width: Int, val height: Int, val dateCreated: Int, val dateModified: Int) :
-    FileType()
+//Holds type of file and its metadata
+sealed class FileType {
+    object UnSupported : FileType()
+    object Audio : FileType()
+    object Video : FileType()
+    data class Image(
+        val width: Int,
+        val height: Int,
+    ) : FileType()
+}
 
-data class Audio(
-    val duration: Int,
-    val dateCreated: Int,
-    val dateModified: Int,
-    val album: String,
-) : FileType()
-
-data class Video(val duration: Int, val dateCreated: Int, val dateModified: Int) : FileType()
 

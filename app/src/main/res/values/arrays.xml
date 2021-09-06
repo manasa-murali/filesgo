@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string-array name="sort_array">
-        <item>Sort By</item>
-        <item>ALPHABET</item>
-        <item>CHRONOLOGY</item>
-        <item>EXTENSION</item>
+        <item>Name (A-Z)</item>
+        <item>Name (Z-A)</item>
+        <item>Sort Latest</item> <!--Sort by last modified ascending-->
+        <item>Sort Oldest</item> <!--Sort by last modified descending-->
+        <item>File type (A-Z)</item>
+        <item>File type (Z-A)</item>
     </string-array>
 </resources>

@@ -2,7 +2,6 @@ package com.example.filesgo.view
 
 import com.example.filesgo.model.FileData
 
-interface OnDetailsClicked {
-
+interface ITalkToFragment {
     fun onItemClicked(fileData: FileData)
 }
