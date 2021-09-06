@@ -8,6 +8,7 @@ data class AppState(
     val sortOrder: SortBy = SortBy.ALPHABET_A_Z,
     val fileDetails: FileData? = null,
     val shouldSave: Boolean = false,
+    val searchString: String = "",
 )
 
 sealed class MyUIState {

@@ -120,11 +120,10 @@ class FileSearchFragment : Fragment(R.layout.fragment_file_search) {
 
     private fun subscribeToViewModel(view: View) {
         val errorStateUi = view.findViewById<TextView>(R.id.error_text)
-        val succesUi = view.findViewById<RecyclerView>(R.id.file_search_list)
+        val successUi = view.findViewById<RecyclerView>(R.id.file_search_list)
         lifecycleScope.launchWhenCreated {
             viewModel.listingDataFlow.collect {
-                val fetchFilesState = it.fetchFilesState
-                when (fetchFilesState) {
+                when (val fetchFilesState = it.fetchFilesState) {
                     MyUIState.Initial -> {
                         Log.i(TAG, "initial")
                         val permissions = getPermissions()
@@ -146,23 +145,23 @@ class FileSearchFragment : Fragment(R.layout.fragment_file_search) {
                         setRefreshing(false, view)
                         Log.i(TAG, "Success ${fetchFilesState.filesList}")
                         requireActivity().runOnUiThread {
-                            setSuccessUiState(view, fetchFilesState)
+                            setSuccessUiState(view, fetchFilesState, it.searchString)
                         }
                         errorStateUi.visibility = View.GONE
-                        succesUi.visibility = View.VISIBLE
+                        successUi.visibility = View.VISIBLE
                     }
                     is MyUIState.Failure -> {
                         setRefreshing(false, view)
                         errorStateUi.visibility = View.VISIBLE
                         errorStateUi.text = getString(R.string.something_went_wrong)
-                        succesUi.visibility = View.GONE
+                        successUi.visibility = View.GONE
                         Log.i(TAG, "Failure")
                     }
                     MyUIState.EmptyFiles -> {
                         setRefreshing(false, view)
                         errorStateUi.visibility = View.VISIBLE
                         errorStateUi.text = getString(R.string.empty_files)
-                        succesUi.visibility = View.GONE
+                        successUi.visibility = View.GONE
                         Log.i(TAG, "Empty")
                     }
 
@@ -181,7 +180,11 @@ class FileSearchFragment : Fragment(R.layout.fragment_file_search) {
         }
     }
 
-    private fun setSuccessUiState(view: View, successState: MyUIState.Success) {
+    private fun setSuccessUiState(
+        view: View,
+        successState: MyUIState.Success,
+        searchString: String,
+    ) {
         val recyclerView = view.findViewById<RecyclerView>(R.id.file_search_list)
         var currentAdapter = recyclerView.adapter
         if (currentAdapter == null) {
@@ -194,14 +197,12 @@ class FileSearchFragment : Fragment(R.layout.fragment_file_search) {
                             findNavController().navigate(R.id.action_fileSearchFragment_to_detailsFragment)
                         }
                     }
-                }
+                }, searchString
             )
             recyclerView.adapter = currentAdapter
         } else {
-            val searchString =
-                view.findViewById<AppCompatEditText>(R.id.search_edittext).text.toString()
-            (currentAdapter as FilesAdapter).submitItems(successState.filesList,
-                searchString.lowercase())
+            (currentAdapter as FilesAdapter).searchString = searchString
+            currentAdapter.submitItems(successState.filesList)
         }
         val count = successState.filesList.size.toString()
         val searchCountView = view.findViewById<TextView>(R.id.searchResult)

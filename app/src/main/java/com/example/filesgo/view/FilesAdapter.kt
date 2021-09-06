@@ -16,10 +16,9 @@ import com.example.filesgo.model.FileData
 class FilesAdapter(
     private var filesList: List<FileData>,
     private var ITalkToFragment: ITalkToFragment,
+    var searchString: String,
 ) :
     RecyclerView.Adapter<FilesAdapter.FileViewHolder>() {
-
-    private var searchString: String = ""
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FileViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
@@ -31,6 +30,7 @@ class FilesAdapter(
         val file = filesList[position]
         holder.fileNameTextView.text = context.getString(R.string.file_name_tag, file.name)
         holder.filePathTextView.text = context.getString(R.string.file_path_tag, file.path)
+
         val startIndex = file.name.lowercase().indexOf(searchString)
         if (startIndex != -1) {
             val editableText = SpannableStringBuilder()
@@ -52,9 +52,8 @@ class FilesAdapter(
         return filesList.size
     }
 
-    fun submitItems(filesList: List<FileData>, searchString: String) {
+    fun submitItems(filesList: List<FileData>) {
         this.filesList = filesList
-        this.searchString = searchString
         notifyDataSetChanged()
     }
 
