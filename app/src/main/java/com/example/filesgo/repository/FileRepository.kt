@@ -14,7 +14,7 @@ import java.nio.charset.Charset
 
 class FileRepository(private val contentResolver: ContentResolver) : IRepository {
 
-    override suspend fun loadFilesFromStorage(): List<FileData> {
+    override suspend fun loadFilesFromStorage(searchString: String): List<FileData> {
 
         val contentUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL)
@@ -97,7 +97,14 @@ class FileRepository(private val contentResolver: ContentResolver) : IRepository
                 arrayList.add(fileData)
             }
             cursor.close()
-            arrayList
+            if (searchString.isEmpty()) {
+                arrayList
+            } else {
+                searchFiles(
+                    searchString,
+                    arrayList
+                )
+            }
         } ?: listOf()
 
         return filesList
@@ -107,7 +114,7 @@ class FileRepository(private val contentResolver: ContentResolver) : IRepository
         return Uri.withAppendedPath(contentUri, "" + id)
     }
 
-    override suspend fun searchFiles(
+    private fun searchFiles(
         searchString: String,
         filesList: List<FileData>,
     ): List<FileData> {

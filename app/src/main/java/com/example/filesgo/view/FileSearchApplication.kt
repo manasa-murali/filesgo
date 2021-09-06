@@ -4,6 +4,7 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.os.Build
+import com.example.filesgo.R
 import com.example.filesgo.utils.Constants
 import dagger.hilt.android.HiltAndroidApp
 
@@ -19,7 +20,7 @@ class FileSearchApplication: Application() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val notificationChannel = NotificationChannel(
                 Constants.CHANNEL_ID,
-                Constants.SEARCH_RESULT,
+                getString(R.string.search),
                 NotificationManager.IMPORTANCE_HIGH
             )
             val notificationManager = getSystemService(NotificationManager::class.java)

@@ -162,6 +162,7 @@ class FileSearchFragment : Fragment(R.layout.fragment_file_search) {
                         errorStateUi.visibility = View.VISIBLE
                         errorStateUi.text = getString(R.string.empty_files)
                         successUi.visibility = View.GONE
+                        setCountView(view, "0")
                         Log.i(TAG, "Empty")
                     }
 
@@ -201,10 +202,13 @@ class FileSearchFragment : Fragment(R.layout.fragment_file_search) {
             )
             recyclerView.adapter = currentAdapter
         } else {
-            (currentAdapter as FilesAdapter).searchString = searchString
-            currentAdapter.submitItems(successState.filesList)
+            (currentAdapter as FilesAdapter).submitItems(successState.filesList, searchString)
         }
         val count = successState.filesList.size.toString()
+        setCountView(view, count)
+    }
+
+    private fun setCountView(view: View, count: String) {
         val searchCountView = view.findViewById<TextView>(R.id.searchResult)
         searchCountView.text = getString(R.string.files_tag, count)
         constructNotification(count)

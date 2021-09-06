@@ -1,5 +1,4 @@
 package com.example.filesgo.model
-
 import android.net.Uri
 
 data class FileData(

@@ -32,7 +32,7 @@ constructor(
 
     val detailsState: LiveData<FileData> = mutableDetailsState
 
-    fun loadFilesFromDevice() {
+    fun loadFilesFromDevice(searchStr: String = "") {
         val currentState = listingDataFlow.value
         viewModelScope.launch(dispatcher) {
 
@@ -43,7 +43,7 @@ constructor(
                 )
             )
 
-            val filesList = fileRepository.loadFilesFromStorage()
+            val filesList = fileRepository.loadFilesFromStorage(searchStr)
 
             //Emit processing State
             mutableAppState.emit(
@@ -64,7 +64,7 @@ constructor(
                         fetchFilesState = MyUIState.Success(
                             filesList = sortedFiles
                         ),
-                        searchString = ""
+                        searchString = searchStr
                     )
                 )
             } else {
@@ -72,7 +72,7 @@ constructor(
                 mutableAppState.emit(
                     currentState.copy(
                         fetchFilesState = MyUIState.EmptyFiles,
-                        searchString = ""
+                        searchString = searchStr
                     )
                 )
             }
@@ -149,61 +149,18 @@ constructor(
                         sortOrder = sortOrder
                     )
                 )
+            } else {
+                mutableAppState.emit(
+                    currentState.copy(
+                        sortOrder = sortOrder
+                    )
+                )
             }
         }
     }
 
     fun search(searchStr: String) {
-        val currentState = listingDataFlow.value
-        if (currentState.fetchFilesState is MyUIState.Success) {
-            viewModelScope.launch(dispatcher) {
-                val currentState = listingDataFlow.value
-
-                //Emit processing State
-                mutableAppState.emit(
-                    currentState.copy(
-                        fetchFilesState = MyUIState.Processing
-                    )
-                )
-
-                //Search only if fecthing is success
-                if (currentState.fetchFilesState is MyUIState.Success) {
-                    val filesFound =
-                        fileRepository.searchFiles(
-                            searchStr,
-                            currentState.fetchFilesState.filesList
-                        )
-
-                    if (filesFound.isNotEmpty()) {
-                        //Emit success state
-                        mutableAppState.emit(
-                            currentState.copy(
-                                fetchFilesState = MyUIState.Success(
-                                    filesList = filesFound
-                                ),
-                                searchString = searchStr
-                            )
-                        )
-                    } else {
-                        //Emit empty files state
-                        mutableAppState.emit(
-                            currentState.copy(
-                                fetchFilesState = MyUIState.EmptyFiles,
-                                searchString = searchStr
-                            )
-                        )
-                    }
-                } else {
-                    //Emit fetching State
-                    mutableAppState.emit(
-                        currentState.copy(
-                            fetchFilesState = MyUIState.Fetching
-                        )
-                    )
-                }
-
-            }
-        }
+        loadFilesFromDevice(searchStr = searchStr)
     }
 
     fun clearSearch() {
