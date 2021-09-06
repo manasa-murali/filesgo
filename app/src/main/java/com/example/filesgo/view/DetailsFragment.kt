@@ -1,5 +1,6 @@
 package com.example.filesgo.view
 
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
@@ -36,9 +37,15 @@ class DetailsFragment : Fragment(R.layout.fragment_details) {
             val fileTypeTextView = view.findViewById<TextView>(R.id.file_type)
             when (it.fileType) {
                 is FileType.Image -> {
+                    val path = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
+                        "file://${it.path}"
+                    } else {
+                        it.contentUri
+                    }
                     Glide.with(this@DetailsFragment)
-                        .load("file://${it.path}")
+                        .load(path)
                         .centerInside()
+                        .error((R.drawable.ic_baseline_camera_alt_24))
                         .into(view.findViewById(R.id.imageview))
                     fileTypeTextView.visibility = View.GONE
                 }

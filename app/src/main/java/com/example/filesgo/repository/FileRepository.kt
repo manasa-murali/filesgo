@@ -2,6 +2,7 @@ package com.example.filesgo.repository
 
 import android.content.ContentResolver
 import android.content.ContentValues
+import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
@@ -74,7 +75,7 @@ class FileRepository(private val contentResolver: ContentResolver) : IRepository
                     else -> FileType.UnSupported
                 }
 
-                val id = cursor.getInt(idColumn)
+                val id = cursor.getLong(idColumn)
                 val displayName = cursor.getString(displayNameColumn)
                 val extension = displayName.split(".").last()
                 val path = cursor.getString(dataColumn)
@@ -90,7 +91,8 @@ class FileRepository(private val contentResolver: ContentResolver) : IRepository
                     dateCreated = dateCreated,
                     dateModified = dateModified,
                     size = size,
-                    fileType = fileType
+                    fileType = fileType,
+                    contentUri = getContentUri(contentUri, id)
                 )
                 arrayList.add(fileData)
             }
@@ -99,6 +101,10 @@ class FileRepository(private val contentResolver: ContentResolver) : IRepository
         } ?: listOf()
 
         return filesList
+    }
+
+    private fun getContentUri(contentUri: Uri, id: Long): Uri {
+        return Uri.withAppendedPath(contentUri, "" + id)
     }
 
     override suspend fun searchFiles(

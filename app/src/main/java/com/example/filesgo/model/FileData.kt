@@ -1,7 +1,9 @@
 package com.example.filesgo.model
 
+import android.net.Uri
+
 data class FileData(
-    val id: Int,
+    val id: Long,
     val name: String,
     val fileType: FileType,
     val extension: String,
@@ -9,6 +11,7 @@ data class FileData(
     val size: Long,
     val dateCreated: Long,
     val dateModified: Long,
+    val contentUri: Uri,
 )
 
 //Holds type of file and its metadata
